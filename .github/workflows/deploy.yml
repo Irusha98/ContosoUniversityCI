@@ -1,4 +1,4 @@
-name: Deploy ASP.NET Core App to Azure
+name: Build and Deploy ASP.NET Core App to Azure (.NET 8)
 
 on:
   push:
@@ -7,13 +7,13 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Setup .NET
+      - name: Setup .NET 8
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0.x'
@@ -21,14 +21,20 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
 
-      - name: Build solution
+      - name: Build
         run: dotnet build --configuration Release
 
-      - name: Publish app
+      - name: Publish
         run: dotnet publish -c Release -o ./publish
+
+      # ✅ Add this step
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
 
       - name: Deploy to Azure WebApp
         uses: azure/webapps-deploy@v2
         with:
-          app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          app-name: 'UnicI'
+          package: ./publish
